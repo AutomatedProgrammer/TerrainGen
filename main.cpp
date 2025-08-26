@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <vector>
+#include <bits/stdc++.h>
 
 #include "Utilities/Shader.h"
 #include "Utilities/Camera.h"
@@ -16,7 +17,7 @@ void MouseCallback(GLFWwindow* window, double x_pos, double y_pos);
 const int HEIGHT = 800, WIDTH = 600;
 float delta_time = 0.0f, last_frame = 0.0f;
 
-Camera camera(HEIGHT, WIDTH, glm::vec3(2.5f, 5.0f, 2.5f));
+Camera camera(HEIGHT, WIDTH, glm::vec3(2.5f, 30.0f, 2.5f));
 
 int main()
 { 
@@ -37,8 +38,9 @@ int main()
 
 
     glfwMakeContextCurrent(window);
-
+    std::srand(std::time(0));
     int seed = 0;
+    seed = std::rand();
     //std::cout << "Please enter a seed (Integers Only):";
     //std::cin >> seed;
 
@@ -53,13 +55,17 @@ int main()
 
     //Terrain Gen
     noise::module::Perlin noise;
-    //noise.SetFrequency(0.75f);
-    //noise.SetPersistence(0.5f);
-    noise.SetOctaveCount(3);
+    noise::module::ScaleBias flat;
+    noise.SetFrequency(2.0f);
+    //noise.SetPersistence(0.4f);
+    //noise.SetOctaveCount(6);
+    flat.SetSourceModule(0, noise);
+    flat.SetScale(0.1);
+    flat.SetBias(0.35);
     std::vector<Vertex> terrain_vertices;
     std::vector<unsigned int> terrain_indices;
     std::vector<Texture> terrain_textures;
-    int size = 500;
+    int size = 1000;
 
     for (int i = 0; i < size; i++)
     {
@@ -68,7 +74,7 @@ int main()
             Vertex vertex;
             float x = (float)i / (float)size;
             //float y = 0;
-            float y = (float)noise.GetValue((float)i / (float)size, 0, (float)j / (float)size);
+            float y = (float)flat.GetValue((float)i / (float)size, 0, (float)j / (float)size);
             float z = (float)j / (float)size;
             vertex.Position.x = x;
             vertex.Position.y = y;
@@ -119,7 +125,7 @@ int main()
         terrain_shader.SetMat4("view", camera.GetView());
         terrain_shader.SetMat4("projection", camera.GetProjection());
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(10.0f));
+        model = glm::scale(model, glm::vec3(50.0f));
         terrain_shader.SetMat4("model", model);
 
         terrain.Draw(terrain_shader);
