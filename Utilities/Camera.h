@@ -87,6 +87,7 @@ void Camera::MoveCamera(float camera_speed, KEY key)
 
         case Z:
         camera_pos -= camera_speed * glm::vec3(0.0f, 1.0f, 0.0f);
+        break;
     }
 }
 

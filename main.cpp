@@ -13,11 +13,13 @@
 
 void ProcessInput(GLFWwindow* window);
 void MouseCallback(GLFWwindow* window, double x_pos, double y_pos);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 const int HEIGHT = 800, WIDTH = 600;
 float delta_time = 0.0f, last_frame = 0.0f;
 
 Camera camera(HEIGHT, WIDTH, glm::vec3(2.5f, 30.0f, 2.5f));
+bool wireframe = false;
 
 int main()
 { 
@@ -41,11 +43,10 @@ int main()
     std::srand(std::time(0));
     int seed = 0;
     seed = std::rand();
-    //std::cout << "Please enter a seed (Integers Only):";
-    //std::cin >> seed;
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, MouseCallback);
+    glfwSetKeyCallback(window, KeyCallback);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -56,9 +57,8 @@ int main()
     //Terrain Gen
     noise::module::Perlin noise;
     noise::module::ScaleBias flat;
+    noise.SetSeed(seed);
     noise.SetFrequency(2.0f);
-    //noise.SetPersistence(0.4f);
-    //noise.SetOctaveCount(6);
     flat.SetSourceModule(0, noise);
     flat.SetScale(0.1);
     flat.SetBias(0.35);
@@ -106,11 +106,16 @@ int main()
     terrain_shader.LoadFragmentShader("terrain_shader.frag");
     terrain_shader.Link();
     Mesh terrain(terrain_vertices, terrain_indices, terrain_textures);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
     glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window))
     {
+        if (wireframe) 
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else 
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        
         int width = 0, height = 0;
         glfwGetFramebufferSize(window, &width, &height);
         float currentFrame = glfwGetTime();
@@ -145,7 +150,7 @@ void ProcessInput(GLFWwindow* window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     
-    float cameraSpeed = 10.0f * delta_time;
+    float cameraSpeed = 25.0f * delta_time;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.MoveCamera(cameraSpeed, W);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -158,9 +163,22 @@ void ProcessInput(GLFWwindow* window)
         camera.MoveCamera(cameraSpeed, Q);
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
         camera.MoveCamera(cameraSpeed, Z);
+        
+    
 }
 
 void MouseCallback(GLFWwindow* window, double x_pos, double y_pos)
 {
     camera.Rotate(x_pos, y_pos);
+}
+
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_P && action == GLFW_PRESS)
+    {
+        if (wireframe)
+            wireframe = false;
+        else
+            wireframe = true;
+    }
 }
